@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { asset, purchase, payment, session } from "@/lib/db/schema"; // payment added
+import { asset, purchase, payment, user, invoice} from "@/lib/db/schema"; // payment added
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -94,7 +94,6 @@ try {
 }
 }
 
-
 export async function hasUserPurchasedAssetAction(assetId: string) {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -122,34 +121,6 @@ export async function hasUserPurchasedAssetAction(assetId: string) {
     return false;
   }
 }
-
-export async function getAllUserPurchasedAction() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user?.id) {
-    redirect('/login');
-  }
-
-  try {
-    const userPurchases = await db
-      .select({
-        purchase: purchase,
-        asset: asset,  
-      })
-      .from(purchase)
-      .innerJoin(asset, eq(purchase.assetId, asset.id))
-      .where(eq(purchase.userId, session.user.id))
-      .orderBy(purchase.createdAt);
-
-    return userPurchases;
-  } catch (error) {
-    console.error('getAllUserPurchasedAction error:', error);
-    return [];
-  }
-}
-
 
 export async function recordPurchaseAction(
   assetId: string,
@@ -215,27 +186,102 @@ export async function recordPurchaseAction(
   }
 }
 
-// Fetch HTML Invoice for a given purchase ID
-export async function getUserInvoicesAction(id: string) {
-  // Dummy/fetch actual purchase data
-  // Replace these variables with fetched DB data as needed
-  const asset = {
-    title: "hill",
-    fileUrl: "https://res.cloudinary.com/dzxsevgxr/image/upload/v1762590377/next-gallery-app-manager/pgiyfreh8ilxbtwwsog2.jpg"
-  };
-  const userName = "Ayuxx (Kanha)";
-  const userImage = "https://lh3.googleusercontent.com/a/ACg8ocIfI22R2wtW3268XgPTDIck2SMJev4wI-Ffe-Ff5YGoi8Zzg2vg=s96-c";
-  const purchaseDate = "2025-11-08T08:26:17.625Z";
-  const categoryName = "DOG";
-  const price = 5.0;
-  const invoiceId = id;
+export async function getAllUserPurchasedAction() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  const html = `
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  try {
+    const userPurchases = await db
+      .select({
+        purchase: {
+          id: purchase.id,
+          assetId: purchase.assetId,
+          userId: purchase.userId,
+          paymentId: purchase.paymentId,
+          price: purchase.price,
+          createdAt: purchase.createdAt,
+        },
+        asset: {
+          id: asset.id,
+          title: asset.title,
+          description: asset.description,
+          fileUrl: asset.fileUrl,
+          thumbnailUrl: asset.thumbnailUrl,
+          categoryId: asset.categoryId,
+        },
+      })
+      .from(purchase)
+      .innerJoin(asset, eq(purchase.assetId, asset.id))
+      .where(eq(purchase.userId, session.user.id))
+      .orderBy(purchase.createdAt);
+
+    return userPurchases;
+  } catch (error) {
+    console.error("getAllUserPurchasedAction error:", error);
+    return [];
+  }
+}
+
+export async function getAllInvoicesAction() {
+  try {
+    const invoices = await db
+      .select({
+        id: invoice.id,
+        purchaseId: invoice.purchaseId,
+        invoiceNumber: invoice.invoiceNumber,
+        amount: invoice.amount,
+        status: invoice.status,
+        createdAt: invoice.createdAt,
+      })
+      .from(invoice);
+
+    return {
+      success: true,
+      invoices: invoices || [],
+    };
+  } catch (error) {
+    console.error("getAllInvoicesAction error:", error);
+    return {
+      success: false,
+      invoices: [],
+    };
+  }
+}
+
+export async function getUserInvoicesAction(invoiceId: string) {
+  try {
+    const invoiceData = await db
+      .select({
+        invoice: invoice,
+        purchase: purchase,
+        asset: asset,
+        user: user,
+      })
+      .from(invoice)
+      .innerJoin(purchase, eq(invoice.purchaseId, purchase.id))
+      .innerJoin(asset, eq(purchase.assetId, asset.id))
+      .innerJoin(user, eq(invoice.userId, user.id))
+      .where(eq(invoice.id, invoiceId))
+      .limit(1);
+
+    if (!invoiceData.length) {
+      return { success: false, html: "<h1>Invoice Not Found</h1>" };
+    }
+
+    const { invoice: inv, purchase: purch, asset: ast, user: usr } =
+      invoiceData[0];
+
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Invoice #${invoiceId}</title>
+  <title>Invoice #${inv.invoiceNumber}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     body {
@@ -243,6 +289,7 @@ export async function getUserInvoicesAction(id: string) {
       padding: 30px 0;
       font-family: 'Segoe UI', Arial, sans-serif;
       color: #222;
+      margin: 0;
     }
     .invoice-container {
       max-width: 540px;
@@ -326,19 +373,21 @@ export async function getUserInvoicesAction(id: string) {
 <body>
   <div class="invoice-container">
     <div class="header">
-      <img src="${userImage}" alt="User" class="avatar"/>
+      <img src="${usr.image || "https://via.placeholder.com/54"}" alt="User" class="avatar"/>
       <div>
-        <div style="font-weight: 600; font-size: 1.08rem">${userName}</div>
+        <div style="font-weight: 600; font-size: 1.08rem">${usr.name}</div>
         <div style="font-size: 12px; color: #757575">Customer</div>
       </div>
       <div style="margin-left: auto; text-align: right;">
         <div class="invoice-label">INVOICE</div>
-        <span style="font-size:13px;color: #b0b9c8;">#${invoiceId}</span>
+        <span style="font-size:13px;color: #b0b9c8;">#${inv.invoiceNumber}</span>
       </div>
     </div>
-    <img class="asset-image" src="${asset.fileUrl}" alt="Asset" />
-    <div class="invoice-title">${asset.title}</div>
-    <div style="margin-bottom:14px;color:#8c8c8c;">Category: <b>${categoryName}</b></div>
+    <img class="asset-image" src="${ast.fileUrl}" alt="Asset" />
+    <div class="invoice-title">${ast.title}</div>
+    <div style="margin-bottom:14px;color:#8c8c8c;">Description: <b>${
+      ast.description || "Digital Asset"
+    }</b></div>
     <table>
       <thead>
         <tr>
@@ -349,18 +398,18 @@ export async function getUserInvoicesAction(id: string) {
       <tbody>
         <tr>
           <td>Digital Asset Purchase</td>
-          <td style="text-align:right;">$${price.toFixed(2)}</td>
+          <td style="text-align:right;">$${(inv.amount / 100).toFixed(2)}</td>
         </tr>
       </tbody>
       <tfoot>
         <tr class="total-row">
           <td>Total</td>
-          <td style="text-align:right;">$${price.toFixed(2)}</td>
+          <td style="text-align:right;">$${(inv.amount / 100).toFixed(2)}</td>
         </tr>
       </tfoot>
     </table>
     <div style="font-size:13px; color:#8d8d8d; margin-top: 8px;">
-      Purchased on: <span>${new Date(purchaseDate).toLocaleString()}</span>
+      Purchased on: <span>${new Date(purch.createdAt).toLocaleString()}</span>
     </div>
     <div class="footer">
       Generated by Next Gallery App
@@ -368,9 +417,14 @@ export async function getUserInvoicesAction(id: string) {
   </div>
 </body>
 </html>
-`;
+    `;
 
-  return { success: true, html };
+    return { success: true, html };
+  } catch (error) {
+    console.error("getUserInvoicesAction error:", error);
+    return { success: false, html: "<h1>Error generating invoice</h1>" };
+  }
 }
+
 
 

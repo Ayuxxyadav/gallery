@@ -1,14 +1,21 @@
+export const dynamic = 'force-dynamic'; 
+
 import { getAllCategoriesAction, getTotalAssetsCountAction, getTotalUsersCountAction } from "@/actions/admin-actions";
 import CategoryManager from "@/components/admin/category-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Database } from "lucide-react";
 
 export default async function SettingsPage() {
-  const [categories, userCount , assetCount] = await Promise.all([
+  const [categoriesResult, userCountResult, assetCountResult] = await Promise.all([
     getAllCategoriesAction(),
     getTotalUsersCountAction(),
     getTotalAssetsCountAction()
   ]);
+
+  // Type-safe conversion - ensure numbers only
+  const categories = Array.isArray(categoriesResult) ? categoriesResult : [];
+  const userCount = typeof userCountResult === 'number' ? userCountResult : 0;
+  const assetCount = typeof assetCountResult === 'number' ? assetCountResult : 0;
 
   return (
     <div className="container py-10">
@@ -41,14 +48,13 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-      
 
       <Card>
         <CardHeader>
           <CardTitle>Category Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <CategoryManager categories={Array.isArray(categories) ? categories : []} />
+          <CategoryManager categories={categories} />
         </CardContent>
       </Card>
     </div>
