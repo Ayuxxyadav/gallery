@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { z } from 'zod';
-import { eq, and } from "drizzle-orm";
+import { eq, and, SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { asset, category, user } from "@/lib/db/schema"; // user added
 import { headers } from "next/headers";
@@ -76,10 +76,10 @@ export async function getUserAssetsAction(userId: string) {
 
 export async function getPublicAssetsAction(categoryId?: number) {
   try {
-    let conditions = eq(asset.isApproved, 'approved');
-    if (categoryId) {
-      conditions = and(conditions, eq(asset.categoryId, categoryId));
-    }
+let conditions: SQL<unknown> | undefined = eq(asset.isApproved, 'approved');
+if (categoryId) {
+  conditions = and(conditions, eq(asset.categoryId, categoryId));
+}
 
     const query = await db
       .select({
