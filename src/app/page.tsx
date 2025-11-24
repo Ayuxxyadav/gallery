@@ -30,9 +30,11 @@ export default function Home() {
               </Button>
             </Link>
 
-            {/* Optional secondary CTA (kept here but can be removed) */}
             <Link href="/sell" aria-label="Start selling your art">
-              <Button variant="outline" className="border-teal-600 text-teal-700 px-6 py-3 rounded-full hidden sm:inline-flex">
+              <Button
+                variant="outline"
+                className="border-teal-600 text-teal-700 px-6 py-3 rounded-full hidden sm:inline-flex"
+              >
                 Sell Your Art
               </Button>
             </Link>
@@ -41,55 +43,77 @@ export default function Home() {
 
         {/* Featured cards (responsive grid) */}
         <div className="mt-12 md:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full max-w-6xl">
-          <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col items-center py-8">
-            <div className="bg-white rounded-full p-3 mb-4 shadow-sm">
-              <Image className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600" />
+          {/* Card 1 */}
+          <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col items-center text-center py-8">
+            {/* badge + header in same column so everything centers */}
+            <div className="flex flex-col items-center px-6 w-full">
+              <div className="bg-white rounded-full p-3 mb-3 shadow-sm mx-auto -mt-6">
+                <Image className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600" />
+              </div>
+
+              <CardHeader className="p-0 mb-2 flex flex-col items-center">
+                <CardTitle className="text-lg sm:text-xl font-semibold text-gray-800 leading-snug">
+                  Abstract Painting
+                </CardTitle>
+                <p className="text-gray-500 text-sm mt-2">Abstract Serenity</p>
+              </CardHeader>
             </div>
-            <CardHeader className="p-0 mb-2">
-              <CardTitle className="text-lg sm:text-xl font-semibold text-gray-800">Abstract Painting</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center px-6 flex flex-col grow">
-              <p className="text-gray-500 text-sm mb-4">Abstract Serenity</p>
-              <div className="mt-auto w-full flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
+
+            <CardContent className="text-center px-6 flex flex-col grow w-full">
+              <div className="mt-auto w-full flex flex-col sm:flex-row items-center sm:justify-between gap-3 py-4">
                 <span className="font-semibold text-teal-700 text-lg">$299</span>
-                <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2">
-                  <ShoppingBag className="w-4 h-4 mr-2 inline-block" /> Buy
+                <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 inline-flex items-center">
+                  <ShoppingBag className="w-4 h-4 mr-2" /> Buy
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col items-center py-8">
-            <div className="bg-white rounded-full p-3 mb-4 shadow-sm">
-              <Palette className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600" />
+          {/* Card 2 */}
+          <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col items-center text-center py-8">
+            <div className="flex flex-col items-center px-6 w-full">
+              <div className="bg-white rounded-full p-3 mb-3 shadow-sm mx-auto -mt-6">
+                <Palette className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600" />
+              </div>
+
+              <CardHeader className="p-0 mb-2 flex flex-col items-center">
+                <CardTitle className="text-lg sm:text-xl font-semibold text-gray-800 leading-snug">
+                  Portrait Painting
+                </CardTitle>
+                <p className="text-gray-500 text-sm mt-2">Whispers of Soul</p>
+              </CardHeader>
             </div>
-            <CardHeader className="p-0 mb-2">
-              <CardTitle className="text-lg sm:text-xl font-semibold text-gray-800">Portrait Painting</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center px-6 flex flex-col grow">
-              <p className="text-gray-500 text-sm mb-4">Whispers of Soul</p>
-              <div className="mt-auto w-full flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
+
+            <CardContent className="text-center px-6 flex flex-col grow w-full">
+              <div className="mt-auto w-full flex flex-col sm:flex-row items-center sm:justify-between gap-3 py-4">
                 <span className="font-semibold text-teal-700 text-lg">$450</span>
-                <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2">
-                  <ShoppingBag className="w-4 h-4 mr-2 inline-block" /> Buy
+                <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 inline-flex items-center">
+                  <ShoppingBag className="w-4 h-4 mr-2" /> Buy
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col items-center py-8">
-            <div className="bg-white rounded-full p-3 mb-4 shadow-sm">
-              <Trees className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600" />
+          {/* Card 3 */}
+          <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col items-center text-center py-8">
+            <div className="flex flex-col items-center px-6 w-full">
+              <div className="bg-white rounded-full p-3 mb-3 shadow-sm mx-auto -mt-6">
+                <Trees className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600" />
+              </div>
+
+              <CardHeader className="p-0 mb-2 flex flex-col items-center">
+                <CardTitle className="text-lg sm:text-xl font-semibold text-gray-800 leading-snug">
+                  Nature Painting
+                </CardTitle>
+                <p className="text-gray-500 text-sm mt-2">Harmony in Nature</p>
+              </CardHeader>
             </div>
-            <CardHeader className="p-0 mb-2">
-              <CardTitle className="text-lg sm:text-xl font-semibold text-gray-800">Nature Painting</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center px-6 flex flex-col grow">
-              <p className="text-gray-500 text-sm mb-4">Harmony in Nature</p>
-              <div className="mt-auto w-full flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
+
+            <CardContent className="text-center px-6 flex flex-col grow w-full">
+              <div className="mt-auto w-full flex flex-col sm:flex-row items-center sm:justify-between gap-3 py-4">
                 <span className="font-semibold text-teal-700 text-lg">$389</span>
-                <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2">
-                  <ShoppingBag className="w-4 h-4 mr-2 inline-block" /> Buy
+                <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 inline-flex items-center">
+                  <ShoppingBag className="w-4 h-4 mr-2" /> Buy
                 </Button>
               </div>
             </CardContent>
