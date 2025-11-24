@@ -1,0 +1,101 @@
+# Use Debian-based Node so we can apt-get install psql client easily
+FROM node:20-bullseye
+
+WORKDIR /usr/src/app
+
+# install system deps (postgres client + netcat for wait)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends postgresql-client netcat && \
+    rm -rf /var/lib/apt/lists/*
+
+# copy package files and install deps
+COPY package.json package-lock.json* ./
+# install all deps (dev deps required for drizzle migrations maybe)
+RUN npm ci
+
+# copy rest of project
+COPY . .
+
+# create an entrypoint script that:
+#  - waits for DB to be reachable
+#  - optionally creates the database if it doesn't exist
+#  - runs drizzle generate/migrate if configured
+#  - starts npm run dev
+RUN chmod 755 /usr/src/app && \
+    cat > /usr/local/bin/entrypoint.sh <<'EOF'
+#!/usr/bin/env bash
+set -e
+
+# Ensure DATABASE_URL is set
+if [ -z "$DATABASE_URL" ]; then
+  echo "ERROR: DATABASE_URL must be set in environment"
+  exit 1
+fi
+
+# Helper: try connect
+echo "Waiting for database to be reachable..."
+# Extract host and port for simple TCP check (fallback)
+host=$(echo "$DATABASE_URL" | sed -E 's#^postgres(ql)?:\/\/([^@]+@)?([^:/]+).*#\3#')
+port=$(echo "$DATABASE_URL" | sed -E 's#^.*:([0-9]+)\/.*#\1#' || true)
+if [ -z "$port" ]; then port=5432; fi
+
+# Wait loop using nc
+ATTEMPTS=0
+while ! nc -z "$host" "$port" >/dev/null 2>&1; do
+  ATTEMPTS=$((ATTEMPTS+1))
+  if [ "$ATTEMPTS" -gt 60 ]; then
+    echo "Timed out waiting for Postgres at $host:$port"
+    exit 1
+  fi
+  sleep 1
+done
+echo "Postgres reachable at $host:$port"
+
+# Optionally try to create DB if not exists.
+# Parse DB name and connect to 'postgres' database to create target
+DBNAME=$(echo "$DATABASE_URL" | sed -E 's#^.*/([^?]+)(\?.*)?$#\1#')
+if [ -n "$DBNAME" ]; then
+  echo "Ensuring database '$DBNAME' exists..."
+  # psql can take connection string but to create a DB we connect to postgres db
+  # Build a connection string to 'postgres' by replacing the db name
+  PG_CONN_TO_POSTGRES=$(echo "$DATABASE_URL" | sed -E 's#(/)[^/]+(#/\)postgres#' 2>/dev/null) || true
+  # Fallback: try using DATABASE_URL but 'CREATE DATABASE' might fail if connected to same DB
+  if [ -n "$PG_CONN_TO_POSTGRES" ]; then
+    # Try create DB (ignore errors if already exists)
+    psql "$PG_CONN_TO_POSTGRES" -v ON_ERROR_STOP=0 -c "CREATE DATABASE \"$DBNAME\";" || true
+  else
+    # fallback try: attempt create using original string (some providers allow)
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=0 -c "SELECT 1;" || true
+  fi
+fi
+
+# Run drizzle migrations if config exists
+if [ -f "drizzle.config.ts" ] || [ -f "drizzle.config.js" ] || [ -d "drizzle" ]; then
+  echo "Found drizzle config — running generate + migrate (if available)..."
+  # generate schema (optional)
+  if npx --no-install drizzle-kit generate >/dev/null 2>&1; then
+    echo "drizzle-kit generate done"
+  fi
+  # run migrations
+  if npx --no-install drizzle-kit migrate >/dev/null 2>&1; then
+    echo "drizzle-kit migrate done"
+  else
+    # try run without --no-install (if not cached)
+    npx drizzle-kit migrate || true
+  fi
+else
+  echo "No drizzle config found — skipping migrations."
+fi
+
+# Start dev server (user requested npm run dev)
+echo "Starting dev server (npm run dev)..."
+exec npm run dev
+EOF
+
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Expose common dev port for Next (adjust if you use different)
+EXPOSE 3000
+
+# Use the entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
