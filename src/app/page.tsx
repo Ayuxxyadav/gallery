@@ -30,8 +30,9 @@ export default function Home() {
               </Button>
             </Link>
 
-            <Link href="/sell" aria-label="Start selling your art">
+            <Link href="/gallery" aria-label="Start selling your art">
               <Button
+               
                 variant="outline"
                 className="border-teal-600 text-teal-700 px-6 py-3 rounded-full hidden sm:inline-flex"
               >

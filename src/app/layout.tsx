@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Asset manager app",
-  description: "Asset manager app",
+  title: "Gallery",
+  description: "To Sell your asset",
 };
 
 export default function RootLayout({
