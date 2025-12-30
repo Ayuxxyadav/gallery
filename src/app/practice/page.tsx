@@ -30,7 +30,7 @@ export default function  Product() {
                      <div>{prod.name}</div>
                      <div>{prod.price}</div>
                      <Link href={`/practice/${prod.id}`}>
-                     View detailss. and
+                     View detailss. and more
                      </Link>
                     </div>
                 ))
