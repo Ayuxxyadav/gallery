@@ -16,7 +16,7 @@ export async function POST(request : Request){
         const {timestamp} = await request.json();
         const signature = cloudinary.utils.api_sign_request({
             timestamp,
-            folder: 'next-gallery-app-manager'
+            folder: 'next-gallery-app-manag'
         },
         process.env.CLOUDINARY_API_SECRET as string
     );
