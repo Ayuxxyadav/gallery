@@ -1,6 +1,6 @@
 import { apiKey } from 'better-auth/plugins';
 import {v2 as cloudinary} from 'cloudinary'
-import { error } from 'console';
+
 import { NextResponse } from 'next/server';
 
 
